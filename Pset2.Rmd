@@ -1,0 +1,184 @@
+---
+title: "Pset-2"
+author: "Jiaqi Sun"
+date: "2022-09-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+```
+
+1a)
+```{r}
+fuel_economy <- read.csv("vehicles.csv")
+
+fuel_economy <- fuel_economy %>%
+  group_by(fuel_economy$year) %>%
+  mutate(avg_mpg = mean(comb08))
+
+ggplot(fuel_economy, aes(x = year, y = avg_mpg, color = fuelType1)) + 
+  geom_point() + 
+  xlab("Year") + 
+  ylab("Average MPG ") +
+  labs(title="Average MPG in different years by fuel type") +
+  theme(plot.title=element_text(hjust=0.5))
+
+# This plot shows how the average miles per gallon changed in the past 40 years with respect to different type of fuel, vehicles with fuel type Electricity and premium gasoline tends to have higher average miles per gallon.
+```
+
+
+1b)
+```{r}
+fuel_economy_1985 <- fuel_economy[fuel_economy$year == "1985", ]
+fuel_economy_1985 %>%
+  group_by(make) %>%
+  mutate(avg_mpg1985 = mean(comb08)) -> fuel_economy_1985
+
+fuel_economy_2022 <- fuel_economy[fuel_economy$year == "2022", ]
+fuel_economy_2022 %>%
+  group_by(make) %>%
+  mutate(avg_mpg2022 = mean(comb08)) -> fuel_economy_2022
+
+common_make <- c("Chevrolet", "Ford", "GMC", "Dodge", "BMW", "Toyota", "Mercedes-Benz", "Nissan", "Porsche", "Volkswagen")
+
+ggplot(fuel_economy_1985, aes(x = make, y = avg_mpg1985)) + geom_bar(position="dodge", stat="identity") +
+  scale_x_discrete(limits = common_make) +
+  xlab("Common Makes") + 
+  ylab("Average MPG ") +
+  labs(title="Average MPG in 1985 by different make") +
+  theme(plot.title=element_text(hjust=0.5)) +
+  ylim(0, 40)
+
+# This plot shows the average miles per gallon in 1985 for different makes,  GMC is the lowest in miles per gallon while the Toyota is the highest
+```
+
+
+```{r}
+ggplot(fuel_economy_2022, aes(x = make, y = avg_mpg2022)) + geom_bar(position="dodge", stat="identity") +
+  scale_x_discrete(limits = common_make) +
+  xlab("Common Makes") + 
+  ylab("Average MPG ") +
+  labs(title="Average MPG in 2022 by different make") +
+  theme(plot.title=element_text(hjust=0.5)) +
+  ylim(0, 40)
+
+#This plot shows the average miles per gallon in 2022 for different makes,  GMC is the lowest in miles per gallon while the Volkswagen is the highest
+
+#Compare these two plots, we can conclude that Ford, Volkswagen, Nissan made huge progress.
+```
+
+Question 2)
+```{r, include=FALSE}
+library(tidyquant)
+library(lubridate)
+```
+
+```{r}
+candle <- read.csv("IXIC21-22.csv")
+
+library(scales)
+
+candle$Date <- as.POSIXct(candle$Date, "%Y-%m-%d", tz =Sys.timezone())
+
+candle %>%
+    ggplot(aes(x= Date, y = round(Adj.Close,0))) +
+    geom_candlestick(aes(open = Open, high = High, low = Low, close = Adj.Close)) +
+    labs(title = "Candlestick chart with the Nasdaq Composite data", y = "Ajust Closing Price", x = "Date") + 
+    theme_tq() + 
+    scale_x_datetime(labels = date_format("%m-%Y")) + 
+    theme(plot.title=element_text(hjust=0.5))
+
+#This daily candlestick plot shows the market's open, high, low, and close price for the day from September 20, 2021 to September 20, 2022
+```
+
+3a)
+```{r}
+rural_cap <- read.csv("ruralCapacityData.csv")
+
+ggplot(rural_cap) +
+  aes(x = per_over_25_with_bach, y = cap_index, color = house_broadband) +
+  geom_point(shape = "circle", size = 1.5, colour = "#112446") +
+  geom_smooth(span = 0.75) +
+  theme_minimal() +
+  labs(title="Rural Capacity Index vs. population 25 and over with a bachelors degree") +
+  xlab("Percent of population 25 and over with a bachelors degree") +
+  ylab("Rural Capacity Index") +
+  theme(plot.title=element_text(hjust=0.5))
+
+# This plot reflects the contribution of the population 25 and over with a bachelors degree to the Rural Capacity Index, it is positive correlated.
+```
+
+3b)
+```{r}
+ggplot(rural_cap) +
+  aes(
+    x = per_over_25_with_bach,
+    y = house_broadband,
+    colour = cap_index
+  ) +
+  geom_point(shape = "circle", size = 1.5) +
+  scale_color_gradient() +
+  theme_minimal() +
+  geom_smooth() +
+  labs(title="Houses with broadband vs. population 25 and over with a bachelors degree") +
+  xlab("Percent of population 25 and over with a bachelors degree") +
+  ylab("Number of houses with broadband")
+
+# This plot demonstrates the relationship between the number of houses with broadband and the percent of adults, 25 and older, with bachelor degrees, colored by rural capacity indexes
+```
+
+3c)
+```{r}
+small_population <- rural_cap[rural_cap$pop_total < 16000, ]
+medium_population <- rural_cap[16000 < rural_cap$pop_total & rural_cap$pop_total < 55000, ]
+large_population <- rural_cap[rural_cap$pop_total > 55000, ]
+
+library(ggplot2)
+
+ggplot(small_population) +
+ aes(x = pop_total, y = cap_index, colour = pop_bachelors) +
+ geom_point(shape = "circle", 
+ size = 1.5) +
+ scale_color_gradient() +
+ geom_smooth() +
+ theme_minimal() + 
+labs(title="Rural Capacity Index vs. Population larger than 16000") +
+ xlab("Population larger than 16000") +
+ ylab("Rural Capacity Index")
+
+# This plot describes how the communities with total population < 16000 contribute to the capacity indexes.In this range, as population goes up, the index goes up too; the higher the percent of bachelors, the higher the index.
+```
+
+```{r}
+ggplot(medium_population) +
+ aes(x = pop_total, y = cap_index, colour = pop_over_25) +
+ geom_point(shape = "circle", 
+ size = 1.5) +
+ scale_color_gradient() +
+ geom_smooth() +
+ theme_minimal() +
+ labs(title="Rural Capacity Index vs. Population less than 55000 but larger than 16000") +
+ xlab("Population less than 55000 but larger than 16000") +
+ ylab("Rural Capacity Index")
+
+# This plot describes how the communities with 16000 < total population < 55000 contribute to the capacity indexes. In this range, there is no clear pattern/relationship between the population and index; 
+```
+
+```{r}
+ggplot(large_population) +
+  aes(x = pop_total, y = cap_index, colour = pop_bachelors) +
+  geom_smooth() +
+  geom_point(shape = "circle", size = 1.5) +
+  scale_color_gradient() +
+  theme_minimal() +
+  labs(title="Rural Capacity Index vs. Population larger than 55000") +
+  xlab("Population larger than 55000") +
+  ylab("Rural Capacity Index")
+
+#This plot describes how the communities with total population > 55000 contribute to the capacity indexes.In this range, there is no clear linear relationship between population and index
+```
+
+
